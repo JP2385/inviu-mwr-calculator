@@ -1,0 +1,17 @@
+  // Calculate inflation comparison
+  const inflacionComparison = calculateInflacionComparison(
+    sortedCashflows,
+    portfolio.totalValue,
+    totalInvertido,
+    duracionAnios
+  );
+
+  // Calculate MWR in USD
+  const mwrUSD = calculateMWRinUSD(
+    sortedCashflows,
+    portfolio.totalValue,
+    portfolio.mepRate,
+    firstDate,
+    lastDate
+  );
+
