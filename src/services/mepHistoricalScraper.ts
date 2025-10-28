@@ -127,6 +127,21 @@ export function getMEPForDate(
 }
 
 /**
+ * Obtiene la fecha mínima disponible en los datos históricos de MEP
+ */
+export async function getMinAvailableMEPDate(): Promise<Date> {
+  const allData = await loadMEPJSONFile();
+  const sortedDates = Object.keys(allData).sort();
+
+  if (sortedDates.length === 0) {
+    throw new Error('No hay datos históricos de MEP disponibles');
+  }
+
+  const minDateStr = sortedDates[0];
+  return new Date(minDateStr);
+}
+
+/**
  * Limpia el caché de datos históricos
  */
 export function clearMEPCache(): void {

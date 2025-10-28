@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { parseExcelDate } from '../utils/dateUtils';
-import { getMEPHistoricalData, getMEPForDate } from './mepHistoricalScraper';
+import { getMEPHistoricalData, getMEPForDate, getMinAvailableMEPDate } from './mepHistoricalScraper';
 import type { Movement, CashFlow, Portfolio, Holding } from '../types';
 
 /**
@@ -88,6 +88,24 @@ export async function processMovimientos(file: File): Promise<CashFlow[]> {
         const allDates = movements.map(m => m.Liquidación as Date);
         const startDate = new Date(Math.min(...allDates.map(d => d.getTime())));
         const endDate = new Date(Math.max(...allDates.map(d => d.getTime())));
+
+        // Validar que todos los movimientos sean posteriores a la fecha mínima disponible de MEP
+        const minAvailableDate = await getMinAvailableMEPDate();
+
+        if (startDate < minAvailableDate) {
+          const formatDate = (date: Date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+          };
+
+          throw new Error(
+            `El archivo contiene movimientos anteriores al ${formatDate(minAvailableDate)}. ` +
+            `El sistema está preparado para procesar carteras cuyos movimientos son posteriores a esta fecha. ` +
+            `El movimiento más antiguo en el archivo es del ${formatDate(startDate)}.`
+          );
+        }
 
         // Obtener todas las cotizaciones históricas del período completo
         const mepHistoricalData = await getMEPHistoricalData(startDate, endDate);
