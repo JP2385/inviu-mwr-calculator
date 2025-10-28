@@ -190,9 +190,6 @@ function calculateMEPComparison(
   let totalDolaresComprados = 0;
   let totalDolaresVendidos = 0;
 
-  console.log('💵 Calculando escenario alternativo: comprar dólar MEP...');
-  console.log(`💵 Inversión total (suma de depósitos): $${totalInvertido.toLocaleString()}`);
-
   // Process each cashflow
   for (const cf of cashflows) {
     const mepRate = cf.mepRate || currentMEPRate;
@@ -202,15 +199,11 @@ function calculateMEPComparison(
       const dolaresComprados = cf.amount / mepRate;
       dolaresAcumulados += dolaresComprados;
       totalDolaresComprados += dolaresComprados;
-
-      console.log(`  📥 ${cf.date.toLocaleDateString('es-AR')}: Depósito $${cf.amount.toLocaleString()} → Compra USD ${dolaresComprados.toFixed(2)} @ $${mepRate.toFixed(2)}`);
     } else {
       // Vender dólares con este retiro (para sacar la plata que necesitas)
       const dolaresVendidos = cf.amount / mepRate;
       dolaresAcumulados -= dolaresVendidos;
       totalDolaresVendidos += dolaresVendidos;
-
-      console.log(`  📤 ${cf.date.toLocaleDateString('es-AR')}: Retiro $${cf.amount.toLocaleString()} → Venta USD ${dolaresVendidos.toFixed(2)} @ $${mepRate.toFixed(2)}`);
     }
   }
 
@@ -221,16 +214,6 @@ function calculateMEPComparison(
   const rendimientoAnualizado = duracionAnios > 0
     ? Math.pow(1 + rendimientoTotal, 1 / duracionAnios) - 1
     : 0;
-
-  console.log(`💵 Resultado MEP:`);
-  console.log(`  Total invertido (depósitos): $${totalInvertido.toLocaleString()}`);
-  console.log(`  USD comprados: ${totalDolaresComprados.toFixed(2)}`);
-  console.log(`  USD vendidos (por retiros): ${totalDolaresVendidos.toFixed(2)}`);
-  console.log(`  USD finales que tenés: ${dolaresAcumulados.toFixed(2)}`);
-  console.log(`  MEP actual: $${currentMEPRate.toFixed(2)}`);
-  console.log(`  Valor final si vendés todo hoy: $${valorFinalARS.toLocaleString()}`);
-  console.log(`  Ganancia vs inversión original: $${gananciaARS.toLocaleString()}`);
-  console.log(`  Rendimiento: ${(rendimientoTotal * 100).toFixed(2)}% total, ${(rendimientoAnualizado * 100).toFixed(2)}% anual`);
 
   return {
     totalDolaresComprados,
@@ -270,17 +253,6 @@ export async function calculateMWR(
     return sum + (cf.type === 'deposit' ? cf.amount : -cf.amount);
   }, 0);
 
-  console.log('🔢 Datos para cálculo de MWR:');
-  console.log('  Total invertido (depósitos):', totalInvertido.toLocaleString('es-AR'));
-  console.log('  Valor actual portfolio:', portfolio.totalValue.toLocaleString('es-AR'));
-  console.log('  Ganancia:', (portfolio.totalValue - totalInvertido).toLocaleString('es-AR'));
-  console.log('  Retorno simple:', ((portfolio.totalValue - totalInvertido) / totalInvertido * 100).toFixed(2) + '%');
-  console.log('  Primer flujo:', sortedCashflows[0].date.toLocaleDateString('es-AR'));
-  console.log('  Último flujo:', sortedCashflows[sortedCashflows.length - 1].date.toLocaleDateString('es-AR'));
-  console.log('  Cantidad de flujos:', sortedCashflows.length);
-  console.log('  Depósitos:', sortedCashflows.filter(cf => cf.type === 'deposit').length);
-  console.log('  Retiros:', sortedCashflows.filter(cf => cf.type === 'withdrawal').length);
-
   // Calculate MWR using Newton-Raphson
   let mwrAnualizado: number;
   try {
@@ -293,7 +265,6 @@ export async function calculateMWR(
 
     // If result is unreasonable, try bisection method
     if (isNaN(mwrAnualizado) || Math.abs(mwrAnualizado) > 100) {
-      console.warn('Newton-Raphson produced unreasonable result, using bisection');
       mwrAnualizado = calculateMWRBisection(
         sortedCashflows,
         portfolio.totalValue,
@@ -302,7 +273,6 @@ export async function calculateMWR(
       );
     }
   } catch (error) {
-    console.warn('Newton-Raphson failed, using bisection:', error);
     mwrAnualizado = calculateMWRBisection(
       sortedCashflows,
       portfolio.totalValue,
@@ -333,11 +303,6 @@ export async function calculateMWR(
   // Update MEP comparison with differences
   mepComparison.diferenciaMWR = mwrAnualizado - mepComparison.rendimientoAnualizado;
   mepComparison.ventajaPortfolio = ganancia - mepComparison.gananciaARS;
-
-  console.log('📊 Comparación Portfolio vs MEP:');
-  console.log(`  Portfolio: ${(mwrAnualizado * 100).toFixed(2)}% anual, ganancia $${ganancia.toLocaleString()}`);
-  console.log(`  Solo MEP: ${(mepComparison.rendimientoAnualizado * 100).toFixed(2)}% anual, ganancia $${mepComparison.gananciaARS.toLocaleString()}`);
-  console.log(`  Diferencia: ${(mepComparison.diferenciaMWR * 100).toFixed(2)}% anual, $${mepComparison.ventajaPortfolio.toLocaleString()} adicionales`);
 
   // Calculate inflation comparison
   const inflacionComparison = await calculateInflacionComparison(
@@ -445,12 +410,6 @@ export async function generatePortfolioEvolution(
     valueUSD: finalValue / currentMEPRate,
     mepRate: currentMEPRate,
   });
-
-  console.log('📈 Evolución del portfolio generada:', data.length, 'puntos');
-  console.log('Primer valor ARS:', data[0]?.value.toLocaleString());
-  console.log('Primer valor USD:', data[0]?.valueUSD.toFixed(2));
-  console.log('Último valor ARS:', data[data.length - 1]?.value.toLocaleString());
-  console.log('Último valor USD:', data[data.length - 1]?.valueUSD.toFixed(2));
 
   return data;
 }

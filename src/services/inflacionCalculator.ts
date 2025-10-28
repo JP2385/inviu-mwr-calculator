@@ -32,15 +32,10 @@ export async function calculateInflacionComparison(
     const adjustedStartDate = firstDate; // NO aplicar delay al inicio
     const adjustedEndDate = ajustarFechaPorDelay(lastDate, 1);
 
-    console.log(`\n💸 Comparación con Inflación`);
-    console.log(`   Período de inversión: ${firstDate.toLocaleDateString('es-AR')} - ${lastDate.toLocaleDateString('es-AR')}`);
-    console.log(`   Datos de inflación: ${adjustedStartDate.toLocaleDateString('es-AR')} - ${adjustedEndDate.toLocaleDateString('es-AR')}`);
-
     // Obtener datos de inflación
     const inflacionData = await getInflacionData(adjustedStartDate, adjustedEndDate);
 
     if (inflacionData.variaciones.length === 0) {
-      console.warn('⚠️ No hay datos de inflación disponibles para el período');
       return null;
     }
 
@@ -64,14 +59,6 @@ export async function calculateInflacionComparison(
 
     // Cuánto más ganaste vs solo guardar pesos (perder poder adquisitivo)
     const ventajaVsInflacion = portfolioValue - totalInvertido;
-
-    console.log(`  Inflación acumulada: ${(inflacionAcumulada * 100).toFixed(2)}%`);
-    console.log(`  Inversión inicial: $${totalInvertido.toLocaleString()}`);
-    console.log(`  Valor ajustado inflación: $${valorAjustadoInflacion.toLocaleString()}`);
-    console.log(`  Pérdida poder adquisitivo: $${perdidaPoderAdquisitivo.toLocaleString()}`);
-    console.log(`  Portfolio actual: $${portfolioValue.toLocaleString()}`);
-    console.log(`  Ganancia real vs inflación: $${gananciaRealVsInflacion.toLocaleString()}`);
-    console.log(`  Rendimiento real: ${(rendimientoRealVsInflacion * 100).toFixed(2)}%`);
 
     return {
       inversionInicial: totalInvertido,

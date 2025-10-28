@@ -22,9 +22,17 @@ export function parseExcelDate(value: any): Date | null {
 
   // If it's a string, try to parse it
   if (typeof value === 'string') {
-    // Try ISO format first
+    // Try ISO format first (YYYY-MM-DD)
     let date = parseISO(value);
     if (isValid(date)) return date;
+
+    // Try DD/MM/YYYY format (common in Argentina)
+    const ddmmyyyyMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (ddmmyyyyMatch) {
+      const [, day, month, year] = ddmmyyyyMatch;
+      date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      if (isValid(date)) return date;
+    }
 
     // Try standard Date constructor
     date = new Date(value);

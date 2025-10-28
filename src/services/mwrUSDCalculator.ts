@@ -142,11 +142,8 @@ export function calculateMWRinUSD(
   firstDate: Date,
   lastDate: Date
 ): MWRinUSD {
-  console.log('\n💵 Calculando MWR en USD...');
-
   // Convert portfolio value to USD
   const portfolioValueUSD = portfolioValueARS / currentMEPRate;
-  console.log(`  Portfolio actual: $${portfolioValueARS.toLocaleString()} ARS = USD ${portfolioValueUSD.toFixed(2)} @ MEP ${currentMEPRate}`);
 
   // Convert each cashflow to USD and calculate total invested
   let totalInvertidoUSD = 0;
@@ -166,9 +163,6 @@ export function calculateMWRinUSD(
     };
   });
 
-  console.log(`  Total invertido: USD ${totalInvertidoUSD.toFixed(2)}`);
-  console.log(`  Valor actual: USD ${portfolioValueUSD.toFixed(2)}`);
-
   // Calculate MWR using USD values
   let mwrAnualizadoUSD: number;
   try {
@@ -181,7 +175,6 @@ export function calculateMWRinUSD(
 
     // If result is unreasonable, try bisection method
     if (isNaN(mwrAnualizadoUSD) || Math.abs(mwrAnualizadoUSD) > 100) {
-      console.warn('Newton-Raphson USD produced unreasonable result, using bisection');
       mwrAnualizadoUSD = calculateMWRBisection(
         cashflowsUSD,
         portfolioValueUSD,
@@ -190,7 +183,6 @@ export function calculateMWRinUSD(
       );
     }
   } catch (error) {
-    console.warn('Newton-Raphson USD failed, using bisection:', error);
     mwrAnualizadoUSD = calculateMWRBisection(
       cashflowsUSD,
       portfolioValueUSD,
@@ -203,10 +195,6 @@ export function calculateMWRinUSD(
   const gananciaUSD = portfolioValueUSD - totalInvertidoUSD;
   const retornoSimpleUSD = totalInvertidoUSD > 0 ? gananciaUSD / totalInvertidoUSD : 0;
   const mwrTotalUSD = retornoSimpleUSD;
-
-  console.log(`  MWR Anualizado USD: ${(mwrAnualizadoUSD * 100).toFixed(2)}%`);
-  console.log(`  Retorno Total USD: ${(mwrTotalUSD * 100).toFixed(2)}%`);
-  console.log(`  Ganancia USD: ${gananciaUSD.toFixed(2)}`);
 
   return {
     mwrAnualizadoUSD,

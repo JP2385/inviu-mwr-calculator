@@ -31,15 +31,12 @@ async function loadMEPJSONFile(): Promise<MEPHistoricalData> {
       const { data, timestamp } = JSON.parse(cached);
       const age = Date.now() - timestamp;
       if (age < CACHE_DURATION) {
-        console.log(`✓ Datos MEP históricos cargados desde caché (${Object.keys(data).length} registros)`);
         return data;
       }
     } catch (error) {
-      console.warn(`Error leyendo caché:`, error);
+      // Cache error, continue to load from file
     }
   }
-
-  console.log(`📊 Cargando datos históricos de MEP desde JSON...`);
 
   try {
     // Fetch el archivo JSON desde public/data/
@@ -50,9 +47,6 @@ async function loadMEPJSONFile(): Promise<MEPHistoricalData> {
     }
 
     const fileData: MEPDataFile = await response.json();
-
-    console.log(`✓ ${fileData.recordCount} cotizaciones históricas de MEP cargadas exitosamente`);
-    console.log(`   Última actualización: ${new Date(fileData.lastUpdate).toLocaleString('es-AR')}`);
 
     // Guardar en caché
     localStorage.setItem(cacheKey, JSON.stringify({
@@ -75,9 +69,6 @@ export async function getMEPHistoricalData(
   startDate: Date,
   endDate: Date
 ): Promise<MEPHistoricalData> {
-  console.log(`\n📊 Obteniendo datos históricos de MEP...`);
-  console.log(`   Período: ${startDate.toLocaleDateString('es-AR')} - ${endDate.toLocaleDateString('es-AR')}`);
-
   // Cargar todos los datos del JSON
   const allData = await loadMEPJSONFile();
 
@@ -91,8 +82,6 @@ export async function getMEPHistoricalData(
       filteredData[dateKey] = allData[dateKey];
     }
   });
-
-  console.log(`✓ ${Object.keys(filteredData).length} cotizaciones en el período solicitado`);
 
   return filteredData;
 }
@@ -147,7 +136,6 @@ export function clearMEPCache(): void {
       localStorage.removeItem(key);
     }
   });
-  console.log('✓ Caché de datos históricos limpiado');
 }
 
 // Helper

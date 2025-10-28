@@ -296,8 +296,8 @@ export default function MWRResults({ result, onReset }: MWRResultsProps) {
       {/* Flows Table */}
       <FlowsTable cashflows={result.cashflows} />
 
-      {/* Download Buttons */}
-      <div className="flex gap-4 justify-center">
+      {/* Download PDF Button */}
+      <div className="flex justify-center">
         <button
           onClick={handleDownloadPDF}
           disabled={isGeneratingPDF}
@@ -319,15 +319,6 @@ export default function MWRResults({ result, onReset }: MWRResultsProps) {
               Descargar Reporte PDF
             </>
           )}
-        </button>
-        <button
-          onClick={() => {
-            // TODO: Implement Excel export
-            alert('Función de exportar Excel en desarrollo');
-          }}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-md"
-        >
-          Descargar Excel
         </button>
       </div>
     </div>

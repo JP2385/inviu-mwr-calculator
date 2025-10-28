@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { parseExcelDate, getDateKey } from '../utils/dateUtils';
+import { parseExcelDate } from '../utils/dateUtils';
 import { getMEPHistoricalData, getMEPForDate } from './mepHistoricalScraper';
 import type { Movement, CashFlow, Portfolio, Holding } from '../types';
 
@@ -57,7 +57,6 @@ export async function processMovimientos(file: File): Promise<CashFlow[]> {
           const date = parseExcelDate(liquidacion);
 
           if (!date) {
-            console.warn('Fecha de liquidación inválida:', row);
             continue;
           }
 
@@ -66,7 +65,6 @@ export async function processMovimientos(file: File): Promise<CashFlow[]> {
           const moneda = row.Moneda || 'ARS';
 
           if (isNaN(monto)) {
-            console.warn('Monto inválido:', row);
             continue;
           }
 
@@ -86,16 +84,10 @@ export async function processMovimientos(file: File): Promise<CashFlow[]> {
           throw new Error('No se encontraron depósitos ni retiros en el archivo');
         }
 
-        console.log(`📋 Encontrados ${movements.length} cashflows externos (Depósito/Retiro)`);
-        console.log(`   ⚠️ Excluidos: Amortización, Compra, Venta, Dividendos, Rentas, etc. (no son aportes externos)`);
-
-
         // Determinar el rango de fechas para obtener datos históricos de MEP
         const allDates = movements.map(m => m.Liquidación as Date);
         const startDate = new Date(Math.min(...allDates.map(d => d.getTime())));
         const endDate = new Date(Math.max(...allDates.map(d => d.getTime())));
-
-        console.log(`📅 Período de inversión: ${startDate.toLocaleDateString('es-AR')} - ${endDate.toLocaleDateString('es-AR')}`);
 
         // Obtener todas las cotizaciones históricas del período completo
         const mepHistoricalData = await getMEPHistoricalData(startDate, endDate);
@@ -112,7 +104,9 @@ export async function processMovimientos(file: File): Promise<CashFlow[]> {
             amountARS = movement.Monto * mepRate;
           }
 
-          const isDeposit = movement.Descripción.includes('Recibo de Cobro');
+          // Determine type from Operación column (already filtered to only Depósito/Retiro)
+          const operacion = movement.Operación.toString().trim().toLowerCase();
+          const isDeposit = operacion === 'depósito' || operacion === 'deposito';
 
           return {
             date,
@@ -124,11 +118,6 @@ export async function processMovimientos(file: File): Promise<CashFlow[]> {
             originalCurrency: movement.Moneda,
           };
         });
-
-        console.log('💰 Cashflows procesados:');
-        console.log('Depósitos:', cashflows.filter(cf => cf.type === 'deposit').length);
-        console.log('Retiros:', cashflows.filter(cf => cf.type === 'withdrawal').length);
-        console.log('Total depositado (ARS):', cashflows.filter(cf => cf.type === 'deposit').reduce((sum, cf) => sum + cf.amount, 0));
 
         resolve(cashflows);
       } catch (error) {
@@ -173,11 +162,28 @@ export async function processTenencias(file: File): Promise<Portfolio> {
         const mepRate = mepCell ? parseFloat(mepCell.v) : 0;
         const cclRate = cclCell ? parseFloat(cclCell.v) : 0;
 
-        console.log('MEP Rate encontrado:', mepRate);
-        console.log('CCL Rate encontrado:', cclRate);
-
         if (mepRate === 0) {
           throw new Error('No se pudo leer el tipo de cambio MEP del archivo. Verifica que la celda B4 contenga el valor del MEP.');
+        }
+
+        // Read valuation date from cell B3 (Fecha de valuación)
+        const fechaCell = sheet['B3'];
+        let fechaValuacion: Date = new Date(); // Default to today if not found
+
+        if (fechaCell) {
+          const fechaValue = fechaCell.v;
+
+          // Try to parse the date
+          if (typeof fechaValue === 'number') {
+            // Excel serial date
+            fechaValuacion = parseExcelDate(fechaValue) || new Date();
+          } else if (typeof fechaValue === 'string') {
+            // String format like "27/10/2025" or "2025-10-27"
+            fechaValuacion = parseExcelDate(fechaValue) || new Date();
+          } else if (fechaValue instanceof Date) {
+            fechaValuacion = fechaValue;
+          }
+
         }
 
         // Convert sheet to JSON starting from row 1
@@ -242,28 +248,18 @@ export async function processTenencias(file: File): Promise<Portfolio> {
         }
 
         if (holdings.length === 0) {
+          throw new Error('No se encontraron tenencias en el archivo');
         }
-
-        console.log(`📊 Tenencias encontradas: ${holdings.length}`);
 
         // Calculate total portfolio value
         const totalValue = holdings.reduce((sum, h) => sum + h.valorTotal, 0);
-
-        console.log('💼 Valor total del portfolio:', totalValue.toLocaleString('es-AR'), 'ARS');
-        console.log('Principales holdings:');
-        holdings
-          .sort((a, b) => b.valorTotal - a.valorTotal)
-          .slice(0, 5)
-          .forEach(h => {
-            console.log(`  ${h.ticker}: ${h.cantidad.toLocaleString('es-AR')} @ $${h.precioActual} = $${h.valorTotal.toLocaleString('es-AR')}`);
-          });
 
         const portfolio: Portfolio = {
           holdings,
           totalValue,
           mepRate,
           cclRate,
-          fecha: new Date(),
+          fecha: fechaValuacion,
         };
 
         resolve(portfolio);

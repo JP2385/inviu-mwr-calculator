@@ -29,15 +29,12 @@ async function loadInflacionData(): Promise<Record<string, number>> {
       const { data, timestamp } = JSON.parse(cached);
       const age = Date.now() - timestamp;
       if (age < CACHE_DURATION) {
-        console.log(`✓ Datos de inflación cargados desde caché (${Object.keys(data).length} meses)`);
         return data;
       }
     } catch (error) {
-      console.warn(`Error leyendo caché de inflación:`, error);
+      // Cache error, continue to load from file
     }
   }
-
-  console.log(`📊 Cargando datos de inflación desde JSON...`);
 
   try {
     const response = await fetch(IPC_DATA_PATH);
@@ -47,9 +44,6 @@ async function loadInflacionData(): Promise<Record<string, number>> {
     }
 
     const fileData: IPCDataFile = await response.json();
-
-    console.log(`✓ ${Object.keys(fileData.data).length} meses de inflación cargados exitosamente`);
-    console.log(`   Última actualización: ${new Date(fileData.lastUpdate).toLocaleString('es-AR')}`);
 
     // Guardar en caché
     localStorage.setItem(CACHE_KEY, JSON.stringify({

@@ -57,7 +57,16 @@ async function updateMEP() {
 
     historicalData.lastUpdate = new Date().toISOString();
 
-    // 4. Guardar archivo actualizado
+    // 4. Ordenar las fechas cronológicamente (YYYY-MM-DD se ordena alfabéticamente)
+    const sortedData = {};
+    Object.keys(historicalData.data)
+      .sort()
+      .forEach(key => {
+        sortedData[key] = historicalData.data[key];
+      });
+    historicalData.data = sortedData;
+
+    // 5. Guardar archivo actualizado
     console.log('\n💾 Guardando archivo actualizado...');
     const dir = path.dirname(MEP_DATA_PATH);
     if (!fs.existsSync(dir)) {

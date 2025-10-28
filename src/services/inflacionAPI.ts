@@ -15,18 +15,8 @@ export async function getInflacionData(
   const startMonth = formatYearMonth(startDate);
   const endMonth = formatYearMonth(endDate);
 
-  console.log(`\n📊 Obteniendo datos de inflación (IPC)...`);
-  console.log(`   Período: ${startMonth} - ${endMonth}`);
-
   // Cargar base de datos
   const database = await getInflacionDatabase();
-
-  // Verificar disponibilidad
-  const hasData = await tieneDatosParaPeriodo(startMonth, endMonth);
-  if (!hasData) {
-    console.warn(`⚠️ No hay datos completos para el período ${startMonth} - ${endMonth}`);
-    console.warn('   Usando datos disponibles en el rango');
-  }
 
   // Obtener variaciones mensuales del rango
   const variaciones: number[] = [];
@@ -37,9 +27,6 @@ export async function getInflacionData(
   for (const mes of meses) {
     variaciones.push(database[mes]);
   }
-
-  console.log(`✓ ${meses.length} meses de datos de inflación obtenidos`);
-  console.log(`   Variaciones: ${variaciones.map(v => v.toFixed(1) + '%').join(', ')}`);
 
   return {
     mesInicio: meses[0] || startMonth,
@@ -61,7 +48,6 @@ export async function calcularInflacionAcumulada(
 
   try {
     const { inflacionAcumulada } = await calcularIndiceIPC(startMonth, endMonth);
-    console.log(`💰 Inflación acumulada ${startMonth} → ${endMonth}: ${(inflacionAcumulada * 100).toFixed(2)}%`);
     return inflacionAcumulada;
   } catch (error) {
     console.error('Error calculando inflación acumulada:', error);
