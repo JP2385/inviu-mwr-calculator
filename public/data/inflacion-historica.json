@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026-01-20T21:25:16.464Z",
+  "lastUpdate": "2026-02-20T21:29:13.255Z",
   "source": "INDEC - Instituto Nacional de Estadística y Censos",
   "url": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31",
   "description": "Variación mensual del IPC (Índice de Precios al Consumidor) - Nivel General",
@@ -65,6 +65,8 @@
     "2025-08": 9185.3068,
     "2025-09": 9377.7681,
     "2025-10": 9602.5137,
-    "2025-11": 9840.8457
+    "2025-11": 9840.8457,
+    "2025-12": 10115.6707,
+    "2026-01": 10395.7458
   }
 }
